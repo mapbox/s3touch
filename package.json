@@ -1,0 +1,20 @@
+{
+  "name": "s3touch",
+  "version": "0.0.0",
+  "description": "Trigger S3 event notifications for objects in an s3 bucket",
+  "bin": {
+    "s3touch": "s3touch"
+  },
+  "author": "Mapbox (https://www.mapbox.com)",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "2.1.x"
+  },
+  "devDependencies": {
+    "tape": "3.5.x"
+  },
+  "scripts": {
+    "test": "tape test/test.js"
+  }
+}
+
