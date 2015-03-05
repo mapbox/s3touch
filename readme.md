@@ -10,3 +10,6 @@ Utility to simulate S3 events without actually re-PUTing objects to S3.
 - Looks up information about `some-object` (size, etag),
 - and sends a simulated S3 event message to the SNS topic.
 
+### Install
+
+    npm install -g s3touch
