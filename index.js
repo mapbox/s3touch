@@ -8,6 +8,7 @@ module.exports = {};
 module.exports.usage = usage;
 module.exports.touch = touch;
 module.exports.createMessage = createMessage;
+module.exports.list = list;
 
 function usage() {
     return 'Usage: s3touch <s3 path>';
@@ -71,5 +72,34 @@ function publishEvent(topic, message, callback) {
         if (err) return callback(new Error('Could not send SNS message ("' + (err.message||err.statusCode) + '")'));
         return callback(null, data);
     });
+}
+
+function list(s3path, callback) {
+    var uri = url.parse(s3path);
+    var bucket = uri.hostname;
+    var prefix = (uri.pathname||'').substr(1);
+
+    if (uri.protocol !== 's3:' || !bucket || !prefix) return callback(new Error('Invalid S3 path "' + s3path + '"'));
+
+    var marker = null;
+    var result = [];
+    function list() {
+        s3.listObjects({
+            Bucket: bucket,
+            Prefix: prefix,
+            Marker: marker
+        }, function(err, data) {
+            if (err) return callback(err);
+            var i = data.Contents.length;
+            while (i--) result.unshift('s3://' + bucket + '/' + data.Contents[i].Key);
+            if (data.NextMarker) {
+                marker = data.NextMarker;
+                list();
+            } else {
+                callback(null, result);
+            }
+        })
+    }
+    list();
 }
 

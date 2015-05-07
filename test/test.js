@@ -7,6 +7,17 @@ tape('usage', function(assert) {
     assert.end();
 });
 
+tape('list', function(assert) {
+    s3touch.list('s3://mapbox-pxm/travis-s3touch', function(err, result) {
+        assert.ifError(err);
+        assert.deepEqual(result, [
+            's3://mapbox-pxm/travis-s3touch/a.txt',
+            's3://mapbox-pxm/travis-s3touch/b.txt'
+        ]);
+        assert.end();
+    });
+});
+
 tape('createMessage', function(assert) {
     s3touch.createMessage('mapbox-pxm', 'travis-s3touch/a.txt', function(err, message) {
         assert.ifError(err);
@@ -74,6 +85,14 @@ tape('bin: touch one', function(assert) {
 
 tape('bin: touch multiple', function(assert) {
     exec(__dirname + '/../s3touch s3://mapbox-pxm/travis-s3touch/a.txt s3://mapbox-pxm/travis-s3touch/b.txt', function(err, stdout, stderr) {
+        assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\nok - s3://mapbox-pxm/travis-s3touch/b.txt\n');
+        assert.equal(stderr, '');
+        assert.end();
+    });
+});
+
+tape('bin: touch recursive', function(assert) {
+    exec(__dirname + '/../s3touch --recursive s3://mapbox-pxm/travis-s3touch', function(err, stdout, stderr) {
         assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\nok - s3://mapbox-pxm/travis-s3touch/b.txt\n');
         assert.equal(stderr, '');
         assert.end();
