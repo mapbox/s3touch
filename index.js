@@ -11,18 +11,19 @@ module.exports.createMessage = createMessage;
 module.exports.list = list;
 
 function usage() {
-    return 'Usage: s3touch <s3 path>';
+    return 'Usage: s3touch <s3 path> [--topic <ARN string>]';
 }
 
-function touch(s3path, cache, callback) {
+function touch(s3path, cache, topic, callback) {
     var uri = url.parse(s3path);
     var bucket = uri.hostname;
     var objkey = (uri.pathname||'').substr(1);
-
+    
     if (uri.protocol !== 's3:' || !bucket || !objkey) return callback(new Error('Invalid S3 path "' + s3path + '"'));
 
     createMessage(bucket, objkey, function(err, message) {
         if (err) return callback(err);
+        if (topic) cache[bucket] = topic;
         if (cache[bucket]) {
             publishEvent(cache[bucket], message, callback);
         } else {
