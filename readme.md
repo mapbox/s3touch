@@ -10,7 +10,7 @@ Utility to simulate S3 events without actually re-PUTing objects to S3.
     # touch all objects under a prefix
     s3touch --recursive s3://my-bucket/some-prefix/
 
-    # touch a single object
+    # touch a single object with custom SNS topic
     s3touch s3://my-bucket/some-object --topic arn:aws:sns:us-east-1:1234:this-bucket-s3-events
 
 - Looks up SNS topic that is subscribed to the given S3 bucket,
