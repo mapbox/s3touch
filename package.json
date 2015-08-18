@@ -1,6 +1,6 @@
 {
   "name": "s3touch",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Trigger S3 event notifications for objects in an s3 bucket",
   "bin": {
     "s3touch": "s3touch"
@@ -18,4 +18,3 @@
     "test": "tape test/test.js"
   }
 }
-
