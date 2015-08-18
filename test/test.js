@@ -3,7 +3,7 @@ var s3touch = require('../index.js');
 var tape = require('tape');
 
 tape('usage', function(assert) {
-    assert.equal(s3touch.usage(), 'Usage: s3touch <s3 path>');
+    assert.equal(s3touch.usage(), 'Usage: s3touch <s3 path> [--topic <ARN string>]');
     assert.end();
 });
 
@@ -37,28 +37,28 @@ tape('createMessage', function(assert) {
 });
 
 tape('touch: invalid url', function(assert) {
-    s3touch.touch('not-an-s3-url', {}, function(err) {
+    s3touch.touch('not-an-s3-url', {}, null, function(err) {
         assert.equal(err.toString(), 'Error: Invalid S3 path "not-an-s3-url"');
         assert.end();
     });
 });
 
 tape('touch: no pathname', function(assert) {
-    s3touch.touch('s3://bucketName', {}, function(err) {
+    s3touch.touch('s3://bucketName', {}, null, function(err) {
         assert.equal(err.toString(), 'Error: Invalid S3 path "s3://bucketName"');
         assert.end();
     });
 });
 
 tape('touch: head 404', function(assert) {
-    s3touch.touch('s3://mapbox-pxm/does-not-exist', {}, function(err) {
+    s3touch.touch('s3://mapbox-pxm/does-not-exist', {}, null, function(err) {
         assert.equal(err.toString(), 'Error: Could not HEAD object ("404")');
         assert.end();
     });
 });
 
 tape('touch: sends notification', function(assert) {
-    s3touch.touch('s3://mapbox-pxm/travis-s3touch/a.txt', {}, function(err, data) {
+    s3touch.touch('s3://mapbox-pxm/travis-s3touch/a.txt', {}, null, function(err, data) {
         assert.ifError(err);
         assert.equal(typeof data, 'object');
         assert.equal(typeof data.MessageId, 'string');
@@ -70,6 +70,22 @@ tape('touch: sends notification', function(assert) {
 tape('bin: usage', function(assert) {
     exec(__dirname + '/../s3touch', function(err, stdout, stderr) {
         assert.equal(stdout, s3touch.usage() + '\n');
+        assert.equal(stderr, '');
+        assert.end();
+    });
+});
+
+tape('bin: empty topic error and usage', function(assert) {
+    exec(__dirname + '/../s3touch s3://mapbox-pxm/travis-s3touch/a.txt --topic', function(err, stdout, stderr) {
+        assert.equal(stdout, s3touch.usage() + '\n');
+        assert.equal(stderr, '');
+        assert.end();
+    });
+});
+
+tape('bin: touch one with topic', function(assert) {
+    exec(__dirname + '/../s3touch s3://mapbox-pxm/travis-s3touch/a.txt --topic arn:aws:sns:us-east-1:234858372212:mapbox-pxm-s3-events', function(err, stdout, stderr) {
+        assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\n');
         assert.equal(stderr, '');
         assert.end();
     });
@@ -91,6 +107,14 @@ tape('bin: touch multiple', function(assert) {
     });
 });
 
+tape('bin: touch multiple with topic', function(assert) {
+    exec(__dirname + '/../s3touch s3://mapbox-pxm/travis-s3touch/a.txt s3://mapbox-pxm/travis-s3touch/b.txt --topic arn:aws:sns:us-east-1:234858372212:mapbox-pxm-s3-events', function(err, stdout, stderr) {
+        assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\nok - s3://mapbox-pxm/travis-s3touch/b.txt\n');
+        assert.equal(stderr, '');
+        assert.end();
+    });
+});
+
 tape('bin: touch recursive', function(assert) {
     exec(__dirname + '/../s3touch --recursive s3://mapbox-pxm/travis-s3touch', function(err, stdout, stderr) {
         assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\nok - s3://mapbox-pxm/travis-s3touch/b.txt\n');
@@ -99,3 +123,10 @@ tape('bin: touch recursive', function(assert) {
     });
 });
 
+tape('bin: touch recursive with topic', function(assert) {
+    exec(__dirname + '/../s3touch --recursive s3://mapbox-pxm/travis-s3touch --topic arn:aws:sns:us-east-1:234858372212:mapbox-pxm-s3-events', function(err, stdout, stderr) {
+        assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\nok - s3://mapbox-pxm/travis-s3touch/b.txt\n');
+        assert.equal(stderr, '');
+        assert.end();
+    });
+});
