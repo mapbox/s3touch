@@ -8,8 +8,14 @@ var s3paths = argv._;
 var cache = {};
 var topic = null;
 
-if (s3paths.length < 1) console.log(s3touch.usage()) && process.exit(1);
-if (argv.topic === true) console.log(s3touch.usage()) && process.exit(1);
+if (s3paths.length < 1) {
+    console.log(s3touch.usage());
+    process.exit(1);
+}
+if (argv.topic === true) {
+    console.log(s3touch.usage());
+    process.exit(1);
+}
 
 function run(err, data) {
     if (err) {
