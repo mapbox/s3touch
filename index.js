@@ -23,8 +23,10 @@ function touch(s3path, cache, topic, callback) {
 
     createMessage(bucket, objkey, function(err, message) {
         if (err) return callback(err);
-        if (topic) cache[bucket] = topic;
-        if (cache[bucket]) {
+        
+        if (topic) {
+            publishEvent(topic, message, callback);
+        } else if (cache[bucket]) {
             publishEvent(cache[bucket], message, callback);
         } else {
             s3.getBucketNotification({ Bucket: bucket }, function(err, data) {
