@@ -90,6 +90,7 @@ tape('bin: touch one with topic', function(assert) {
         assert.end();
     });
 });
+
 tape('bin: touch one', function(assert) {
     exec(__dirname + '/../s3touch s3://mapbox-pxm/travis-s3touch/a.txt', function(err, stdout, stderr) {
         assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\n');
@@ -106,8 +107,24 @@ tape('bin: touch multiple', function(assert) {
     });
 });
 
+tape('bin: touch multiple with topic', function(assert) {
+    exec(__dirname + '/../s3touch s3://mapbox-pxm/travis-s3touch/a.txt s3://mapbox-pxm/travis-s3touch/b.txt --topic arn:aws:sns:us-east-1:234858372212:mapbox-pxm-s3-events', function(err, stdout, stderr) {
+        assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\nok - s3://mapbox-pxm/travis-s3touch/b.txt\n');
+        assert.equal(stderr, '');
+        assert.end();
+    });
+});
+
 tape('bin: touch recursive', function(assert) {
     exec(__dirname + '/../s3touch --recursive s3://mapbox-pxm/travis-s3touch', function(err, stdout, stderr) {
+        assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\nok - s3://mapbox-pxm/travis-s3touch/b.txt\n');
+        assert.equal(stderr, '');
+        assert.end();
+    });
+});
+
+tape('bin: touch recursive with topic', function(assert) {
+    exec(__dirname + '/../s3touch --recursive s3://mapbox-pxm/travis-s3touch --topic arn:aws:sns:us-east-1:234858372212:mapbox-pxm-s3-events', function(err, stdout, stderr) {
         assert.equal(stdout, 'ok - s3://mapbox-pxm/travis-s3touch/a.txt\nok - s3://mapbox-pxm/travis-s3touch/b.txt\n');
         assert.equal(stderr, '');
         assert.end();
