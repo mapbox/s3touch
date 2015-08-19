@@ -95,8 +95,8 @@ function list(s3path, callback) {
             if (err) return callback(err);
             var i = data.Contents.length;
             while (i--) result.unshift('s3://' + bucket + '/' + data.Contents[i].Key);
-            if (data.NextMarker) {
-                marker = data.NextMarker;
+            if (data.IsTruncated) {
+                marker = data.Contents.pop().Key;
                 list();
             } else {
                 callback(null, result);
