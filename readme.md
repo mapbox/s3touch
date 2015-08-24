@@ -1,5 +1,8 @@
 s3touch
 -------
+
+![s3touch](https://cloud.githubusercontent.com/assets/515424/9432169/1165077e-49d3-11e5-93ca-5398fd3b018e.jpg)
+
 Utility to simulate S3 events without actually re-PUTing objects to S3.
 
     Usage: s3touch <s3 path> [--topic <arn string>]
