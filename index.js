@@ -3,7 +3,7 @@ var url = require('url');
 var region = process.env.AWS_DEFAULT_REGION || 'us-east-1';
 var sns = new AWS.SNS({ region: region });
 //var s3 = new AWS.S3({ region: region });
-var s3 = new AWS.S3({ });
+var s3 = new AWS.S3();
 
 module.exports = {};
 module.exports.usage = usage;
@@ -43,9 +43,10 @@ function bucketRegion(bucket, callback) {
     var params = {
         Bucket: bucket
     };
-    s3.getBucketLocation(params, function(err, data) {
-        if (err) console.log(err, err.stack);
-        else     console.log(data);
+    s3.getBucketLocation(params, function(err, bucketlocation) {
+        if (err) return callback(new Error('Region not found ("'+(err.message||err.statusCode)+'")'));
+        if (!bucketlocation.LocationConstraint) bucketlocation.LocationConstraint = "us-east-1";
+        return callback(null, bucketlocation);
     });
 }
 
@@ -55,13 +56,14 @@ function createMessage(bucket, objkey, callback) {
         var size = parseInt(data.ContentLength, 10);
         var etag = JSON.parse(data.ETag);
         var date = (new Date()).toISOString();
-        var bucketregion = bucketRegion(bucket, callback)
-        callback(null, {
+        bucketRegion(bucket, function(err, bucketlocation) {
+            if (err) return callback(new Error ('Region not found ("' + (err.message||err.statusCode) + '")'));
+            callback(null, {
             "Records": [
                 {
                     "eventVersion": "2.0",
                     "eventSource": "aws:s3",
-                    "awsRegion": bucketregion,
+                    "awsRegion": bucketlocation.LocationConstraint,
                     "eventTime": date,
                     "eventName": "ObjectCreated:CompleteMultipartUpload",
                     "s3": {
@@ -77,7 +79,7 @@ function createMessage(bucket, objkey, callback) {
                         }
                     }
                 }
-            ]
+            ]});
         });
     });
 }

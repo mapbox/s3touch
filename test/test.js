@@ -31,6 +31,7 @@ tape('createMessage', function(assert) {
             assert.deepEqual(record.s3.s3SchemaVersion, '1.0');
             assert.deepEqual(record.s3.bucket, { name: 'mapbox-pxm', arn: 'arn:aws:s3:::mapbox-pxm' });
             assert.deepEqual(record.s3.object, { key: 'travis-s3touch/a.txt', size: 0, eTag: 'd41d8cd98f00b204e9800998ecf8427e' });
+            assert.deepEqual(record.awsRegion, 'us-east-1');
         });
         assert.end();
     });
@@ -74,6 +75,7 @@ tape('bin: usage', function(assert) {
         assert.end();
     });
 });
+
 
 tape('bin: empty topic error and usage', function(assert) {
     exec(__dirname + '/../s3touch s3://mapbox-pxm/travis-s3touch/a.txt --topic', function(err, stdout, stderr) {
