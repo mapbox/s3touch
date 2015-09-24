@@ -2,7 +2,8 @@ var AWS = require('aws-sdk');
 var url = require('url');
 var region = process.env.AWS_DEFAULT_REGION || 'us-east-1';
 var sns = new AWS.SNS({ region: region });
-var s3 = new AWS.S3({ region: region });
+//var s3 = new AWS.S3({ region: region });
+var s3 = new AWS.S3({ });
 
 module.exports = {};
 module.exports.usage = usage;
@@ -38,18 +39,29 @@ function touch(s3path, cache, topic, callback) {
     });
 }
 
+function bucketRegion(bucket, callback) {
+    var params = {
+        Bucket: bucket
+    };
+    s3.getBucketLocation(params, function(err, data) {
+        if (err) console.log(err, err.stack);
+        else     console.log(data);
+    });
+}
+
 function createMessage(bucket, objkey, callback) {
     s3.headObject({ Bucket: bucket, Key: objkey }, function(err, data) {
         if (err) return callback(new Error('Could not HEAD object ("'+(err.message||err.statusCode)+'")'));
         var size = parseInt(data.ContentLength, 10);
         var etag = JSON.parse(data.ETag);
         var date = (new Date()).toISOString();
+        var bucketregion = bucketRegion(bucket, callback)
         callback(null, {
             "Records": [
                 {
                     "eventVersion": "2.0",
                     "eventSource": "aws:s3",
-                    "awsRegion": region,
+                    "awsRegion": bucketregion,
                     "eventTime": date,
                     "eventName": "ObjectCreated:CompleteMultipartUpload",
                     "s3": {
