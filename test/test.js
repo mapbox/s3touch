@@ -19,10 +19,12 @@ tape('list', function(assert) {
 });
 
 tape('createMessage', function(assert) {
-    s3touch.createMessage('mapbox-pxm', 'travis-s3touch/a.txt', function(err, message) {
+    var cache = {}
+    s3touch.createMessage('mapbox-pxm', 'travis-s3touch/a.txt', cache, function(err, message) {
         assert.ifError(err);
         assert.equal(typeof message, 'object');
         assert.deepEqual(Object.keys(message), ['Records']);
+        assert.deepEqual(cache, { 'region:mapbox-pxm': 'us-east-1' }, "caches region for bucket");
         assert.equal(Array.isArray(message.Records), true);
         assert.equal(message.Records.length, 1);
         message.Records.forEach(function(record) {

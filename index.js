@@ -2,7 +2,6 @@ var AWS = require('aws-sdk');
 var url = require('url');
 var region = process.env.AWS_DEFAULT_REGION || 'us-east-1';
 var sns = new AWS.SNS({ region: region });
-//var s3 = new AWS.S3({ region: region });
 var s3 = new AWS.S3();
 
 module.exports = {};
@@ -22,24 +21,25 @@ function touch(s3path, cache, topic, callback) {
     
     if (uri.protocol !== 's3:' || !bucket || !objkey) return callback(new Error('Invalid S3 path "' + s3path + '"'));
 
-    createMessage(bucket, objkey, function(err, message) {
+    createMessage(bucket, objkey, cache, function(err, message) {
         if (err) return callback(err);
         
         if (topic) {
             publishEvent(topic, message, callback);
-        } else if (cache[bucket]) {
-            publishEvent(cache[bucket], message, callback);
+        } else if (cache["sns:"+bucket]) {
+            publishEvent(cache["sns:"+bucket], message, callback);
         } else {
             s3.getBucketNotification({ Bucket: bucket }, function(err, data) {
                 if (err) return callback(new Error('Could not get bucket SNS topic ("'+(err.message||err.statusCode)+'")'));
-                cache[bucket] = data.TopicConfiguration.Topic;
-                publishEvent(cache[bucket], message, callback);
+                cache["sns:"+bucket] = data.TopicConfiguration.Topic;
+                publishEvent(cache["sns:"+bucket], message, callback);
             });
         }
     });
 }
 
 function bucketRegion(bucket, callback) {
+    
     var params = {
         Bucket: bucket
     };
@@ -50,20 +50,20 @@ function bucketRegion(bucket, callback) {
     });
 }
 
-function createMessage(bucket, objkey, callback) {
+function createMessage(bucket, objkey, cache, callback) {
     s3.headObject({ Bucket: bucket, Key: objkey }, function(err, data) {
         if (err) return callback(new Error('Could not HEAD object ("'+(err.message||err.statusCode)+'")'));
         var size = parseInt(data.ContentLength, 10);
         var etag = JSON.parse(data.ETag);
         var date = (new Date()).toISOString();
-        bucketRegion(bucket, function(err, bucketlocation) {
-            if (err) return callback(new Error ('Region not found ("' + (err.message||err.statusCode) + '")'));
-            callback(null, {
+        
+        function make(region) {
+            return {
             "Records": [
                 {
                     "eventVersion": "2.0",
                     "eventSource": "aws:s3",
-                    "awsRegion": bucketlocation.LocationConstraint,
+                    "awsRegion": region,
                     "eventTime": date,
                     "eventName": "ObjectCreated:CompleteMultipartUpload",
                     "s3": {
@@ -79,7 +79,15 @@ function createMessage(bucket, objkey, callback) {
                         }
                     }
                 }
-            ]});
+            ]}
+        }
+
+        if (cache["region:"+bucket]) return callback(null, make(cache["region:"+bucket]));
+
+        bucketRegion(bucket, function(err, bucketlocation) {
+            if (err) return callback(new Error ('Region not found ("' + (err.message||err.statusCode) + '")'));
+            cache["region:"+bucket] = bucketlocation.LocationConstraint;            
+            callback(null, make(cache["region:"+bucket]));
         });
     });
 }
