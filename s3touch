@@ -7,6 +7,7 @@ var argv = require('minimist')(process.argv.slice(2), {
 var s3paths = argv._;
 var cache = {};
 var topic = null;
+var requesterPays = false;
 
 if (s3paths.length < 1) {
     console.log(s3touch.usage());
@@ -27,11 +28,12 @@ function run(err, data) {
         s3paths.shift();
     }
     if (s3paths.length) {
-        s3touch.touch(s3paths[0], cache, topic, run);
+        s3touch.touch(s3paths[0], cache, topic, requesterPays, run);
     }
 }
 
 if (argv.topic) topic = argv.topic;
+if (argv.requesterpays) requesterPays = true;
 
 if (argv.recursive) {
     s3touch.list(s3paths[0], function(err, list) {

@@ -11,19 +11,19 @@ module.exports.createMessage = createMessage;
 module.exports.list = list;
 
 function usage() {
-    return 'Usage: s3touch <s3 path> [--topic <ARN string>]';
+    return 'Usage: s3touch <s3 path> [--topic <ARN string>] [--requesterpays]';
 }
 
-function touch(s3path, cache, topic, callback) {
+function touch(s3path, cache, topic, requesterPays, callback) {
     var uri = url.parse(s3path);
     var bucket = uri.hostname;
     var objkey = (uri.pathname||'').substr(1);
-    
+
     if (uri.protocol !== 's3:' || !bucket || !objkey) return callback(new Error('Invalid S3 path "' + s3path + '"'));
 
-    createMessage(bucket, objkey, function(err, message) {
+    createMessage(bucket, objkey, requesterPays, function(err, message) {
         if (err) return callback(err);
-        
+
         if (topic) {
             publishEvent(topic, message, callback);
         } else if (cache[bucket]) {
@@ -38,8 +38,11 @@ function touch(s3path, cache, topic, callback) {
     });
 }
 
-function createMessage(bucket, objkey, callback) {
-    s3.headObject({ Bucket: bucket, Key: objkey }, function(err, data) {
+function createMessage(bucket, objkey, requesterPays, callback) {
+    var params = { Bucket: bucket, Key: objkey }
+    if (requesterPays) params.RequestPayer = 'requester';
+
+    s3.headObject(params, function(err, data) {
         if (err) return callback(new Error('Could not HEAD object ("'+(err.message||err.statusCode)+'")'));
         var size = parseInt(data.ContentLength, 10);
         var etag = JSON.parse(data.ETag);
