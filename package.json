@@ -8,7 +8,7 @@
   "author": "Mapbox (https://www.mapbox.com)",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "2.1.x",
+    "aws-sdk": "2.7.x",
     "minimist": "~1.1.1"
   },
   "devDependencies": {
